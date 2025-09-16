@@ -30,6 +30,11 @@ export async function getForecast(city: string, days = 3): Promise<ForecastWeath
   return fetchFromAPI<ForecastWeather>("forecast", { q: city, days });
 }
 
+// Clima actual con pronóstico horario
+export async function getCurrentWeatherWithHourly(city: string): Promise<any> {
+  return fetchFromAPI<any>("forecast", { q: city, days: 1, hours: 24 });
+}
+
 // Búsqueda de ciudades
 export async function searchCity(query: string): Promise<SearchResult[]> {
   return fetchFromAPI<SearchResult[]>("search", { q: query });

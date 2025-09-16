@@ -75,7 +75,7 @@ import SearchBar from '../components/SearchBar.astro';
 </Layout>
 
 <script>
-  import { getCurrentWeather } from '../services/weatherApi';
+  import { getCurrentWeatherWithHourly } from '../services/weatherApi';
 
   // Escuchar el evento personalizado de datos del clima
   document.addEventListener('weather-data', (event: any) => {
@@ -94,10 +94,6 @@ import SearchBar from '../components/SearchBar.astro';
     
     // Determinar color del gradiente según temperatura
     const temp = data.current.temp_c;
-    let tempColor = 'from-blue-400 to-blue-600'; // frío
-    if (temp > 30) tempColor = 'from-orange-400 to-red-500'; // caliente
-    else if (temp > 20) tempColor = 'from-yellow-400 to-orange-500'; // templado
-    else if (temp > 10) tempColor = 'from-green-400 to-blue-500'; // fresco
     
     // Crear el HTML de la tarjeta del clima con mejor diseño
     weatherContainer.innerHTML = `
@@ -188,28 +184,37 @@ import SearchBar from '../components/SearchBar.astro';
   
   // Función para mostrar el modal de pronóstico extendido
   function showExtendedForecast(data: any) {
+    // Obtener pronóstico por horas (desde ahora hasta medianoche)
+    const currentHour = new Date().getHours();
+    const todayForecast = data.forecast?.forecastday?.[0]?.hour || [];
+    const hourlyForecast = todayForecast.slice(currentHour, 24);
+    
+    // Generar HTML del pronóstico por horas
+    const hourlyHTML = hourlyForecast.map(hour => {
+      const time = new Date(hour.time).getHours();
+      const timeStr = time === 0 ? '12 AM' : time === 12 ? '12 PM' : time < 12 ? `${time} AM` : `${time - 12} PM`;
+      const temp = Math.round(hour.temp_c);
+      
+      return `
+        <div class="flex-shrink-0 bg-white/10 rounded-2xl p-3 text-center backdrop-blur-sm w-20">
+          <p class="text-xs opacity-70 mb-1">${timeStr}</p>
+          <img src="${hour.condition.icon}" alt="${hour.condition.text}" class="w-8 h-8 mx-auto mb-1" />
+          <p class="text-sm font-bold">${temp}°</p>
+          <p class="text-xs opacity-60">${Math.round(hour.wind_kph)} km/h</p>
+        </div>
+      `;
+    }).join('');
+    
     // Crear modal
     const modal = document.createElement('div');
     modal.id = 'forecast-modal';
     modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4';
     
-    // Datos adicionales del clima
-    const uvIndex = data.current.uv || 0;
-    const visibility = data.current.vis_km || 'N/A';
-    const pressure = data.current.pressure_mb || 'N/A';
-    
-    // Determinar nivel de UV
-    let uvLevel = 'Bajo';
-    let uvColor = 'text-green-400';
-    if (uvIndex > 7) { uvLevel = 'Muy Alto'; uvColor = 'text-red-400'; }
-    else if (uvIndex > 5) { uvLevel = 'Alto'; uvColor = 'text-orange-400'; }
-    else if (uvIndex > 2) { uvLevel = 'Moderado'; uvColor = 'text-yellow-400'; }
-    
     modal.innerHTML = `
-      <div class="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-6 max-w-md w-full text-white transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+      <div class="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-6 max-w-2xl w-full text-white transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="modal-content">
         <!-- Header del modal -->
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xl font-medium">Información Detallada</h3>
+          <h3 class="text-xl font-medium">Pronóstico por Horas</h3>
           <button id="close-modal" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors duration-200">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -220,64 +225,40 @@ import SearchBar from '../components/SearchBar.astro';
         <!-- Ubicación -->
         <div class="mb-6 text-center">
           <h4 class="text-lg font-medium opacity-95">${data.location.name}, ${data.location.country}</h4>
-          <p class="text-sm opacity-70">Coordenadas: ${data.location.lat}°, ${data.location.lon}°</p>
+          <p class="text-sm opacity-70">Desde ${new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})} hasta medianoche</p>
         </div>
         
-        <!-- Grid de información extendida -->
+        <!-- Pronóstico por horas -->
+        <div class="mb-6">
+          <div class="flex gap-3 overflow-x-auto pb-4" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;">
+            ${hourlyHTML || '<p class="text-sm opacity-70 text-center w-full">No hay datos disponibles</p>'}
+          </div>
+        </div>
+        
+        <!-- Información adicional -->
         <div class="grid grid-cols-2 gap-4 mb-6">
-          <!-- Índice UV -->
           <div class="bg-white/10 rounded-2xl p-4 text-center backdrop-blur-sm">
-            <div class="flex items-center justify-center mb-2">
-              <svg class="w-5 h-5 mr-2 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
-              </svg>
-            </div>
             <p class="text-xs opacity-70 mb-1">Índice UV</p>
-            <p class="text-lg font-bold">${uvIndex}</p>
-            <p class="text-xs ${uvColor}">${uvLevel}</p>
+            <p class="text-lg font-bold">${data.current.uv || 0}</p>
           </div>
           
-          <!-- Visibilidad -->
           <div class="bg-white/10 rounded-2xl p-4 text-center backdrop-blur-sm">
-            <div class="flex items-center justify-center mb-2">
-              <svg class="w-5 h-5 mr-2 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
-              </svg>
-            </div>
             <p class="text-xs opacity-70 mb-1">Visibilidad</p>
-            <p class="text-lg font-bold">${visibility}</p>
+            <p class="text-lg font-bold">${data.current.vis_km || 'N/A'}</p>
             <p class="text-xs opacity-70">km</p>
           </div>
           
-          <!-- Presión -->
           <div class="bg-white/10 rounded-2xl p-4 text-center backdrop-blur-sm">
-            <div class="flex items-center justify-center mb-2">
-              <svg class="w-5 h-5 mr-2 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"/>
-              </svg>
-            </div>
             <p class="text-xs opacity-70 mb-1">Presión</p>
-            <p class="text-lg font-bold">${pressure}</p>
+            <p class="text-lg font-bold">${data.current.pressure_mb || 'N/A'}</p>
             <p class="text-xs opacity-70">mb</p>
           </div>
           
-          <!-- Hora local -->
           <div class="bg-white/10 rounded-2xl p-4 text-center backdrop-blur-sm">
-            <div class="flex items-center justify-center mb-2">
-              <svg class="w-5 h-5 mr-2 text-green-300" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-              </svg>
-            </div>
             <p class="text-xs opacity-70 mb-1">Hora Local</p>
             <p class="text-sm font-bold">${new Date(data.location.localtime).toLocaleTimeString('es-ES', {
               hour: '2-digit',
               minute: '2-digit'
-            })}</p>
-            <p class="text-xs opacity-70">${new Date(data.location.localtime).toLocaleDateString('es-ES', {
-              weekday: 'short',
-              day: 'numeric',
-              month: 'short'
             })}</p>
           </div>
         </div>
@@ -333,19 +314,6 @@ import SearchBar from '../components/SearchBar.astro';
     document.addEventListener('keydown', handleKeyDown);
   }
   
-  // Función para mostrar loading con mejor animación
-  function showLoading() {
-    const loading = document.getElementById('loading')!;
-    const welcome = document.getElementById('welcome')!;
-    const weatherContainer = document.getElementById('weather-container')!;
-    
-    loading.classList.remove('hidden');
-    loading.classList.add('flex');
-    welcome.classList.add('hidden');
-    weatherContainer.classList.add('hidden');
-    weatherContainer.classList.remove('flex');
-  }
-
   // Ciudades sugeridas
   document.querySelectorAll('.city-suggestion').forEach(button => {
     button.addEventListener('click', () => {

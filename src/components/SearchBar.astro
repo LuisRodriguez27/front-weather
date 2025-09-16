@@ -35,7 +35,7 @@
 </div>
 
 <script>
-  import { searchCity, getCurrentWeather } from '../services/weatherApi';
+  import { searchCity, getCurrentWeatherWithHourly } from '../services/weatherApi';
   
   const form = document.getElementById('weather-form') as HTMLFormElement;
   const input = document.getElementById('city-input') as HTMLInputElement;
@@ -129,7 +129,7 @@
     showLoading();
     
     try {
-      const weatherData = await getCurrentWeather(city);
+      const weatherData = await getCurrentWeatherWithHourly(city);
       
       // Disparar evento personalizado con los datos del clima
       const event = new CustomEvent('weather-data', { 
