@@ -1,0 +1,121 @@
+---
+---
+
+<div class="relative w-full max-w-md mb-8">
+  <form id="weather-form" class="flex bg-white/15 backdrop-blur-md rounded-full border border-white/20 overflow-hidden shadow-xl">
+    <input 
+      type="text" 
+      id="city-input" 
+      placeholder="Buscar ciudad..." 
+      class="flex-1 px-6 py-4 bg-transparent text-white placeholder-white/70 outline-none text-base"
+      autocomplete="off"
+    />
+    <button type="submit" class="px-6 py-4 bg-white/20 text-white hover:bg-white/30 transition-colors duration-300">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+    </button>
+  </form>
+  <div id="suggestions" class="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md rounded-2xl mt-2 shadow-2xl border border-white/30 z-50 max-h-48 overflow-y-auto hidden">
+    <!-- Suggestions will be populated here -->
+  </div>
+</div>
+
+<script>
+  import { searchCity, getCurrentWeather } from '../services/weatherApi.ts';
+  
+  const form = document.getElementById('weather-form') as HTMLFormElement;
+  const input = document.getElementById('city-input') as HTMLInputElement;
+  const suggestions = document.getElementById('suggestions') as HTMLDivElement;
+  
+  let searchTimeout: number;
+  
+  // Búsqueda de ciudades con debounce
+  input.addEventListener('input', () => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    const query = input.value.trim();
+    
+    if (query.length < 2) {
+      suggestions.classList.add('hidden');
+      return;
+    }
+    
+    searchTimeout = window.setTimeout(async () => {
+      try {
+        const cities = await searchCity(query);
+        showSuggestions(cities.slice(0, 5)); // Mostrar máximo 5 sugerencias
+      } catch (error) {
+        console.error('Error buscando ciudades:', error);
+        suggestions.classList.add('hidden');
+      }
+    }, 300);
+  });
+  
+  // Mostrar sugerencias
+  function showSuggestions(cities: any[]) {
+    if (cities.length === 0) {
+      suggestions.classList.add('hidden');
+      return;
+    }
+    
+    suggestions.innerHTML = cities
+      .map(city => `
+        <div class="px-4 py-3 text-gray-800 cursor-pointer border-b border-gray-100 hover:bg-blue-100/50 transition-colors duration-200 last:border-b-0" data-city="${city.name}, ${city.country}">
+          ${city.name}, ${city.region}, ${city.country}
+        </div>
+      `)
+      .join('');
+    
+    suggestions.classList.remove('hidden');
+    
+    // Agregar event listeners a las sugerencias
+    suggestions.querySelectorAll('[data-city]').forEach(item => {
+      item.addEventListener('click', () => {
+        const cityName = item.getAttribute('data-city')!;
+        input.value = cityName;
+        suggestions.classList.add('hidden');
+        searchWeather(cityName);
+      });
+    });
+  }
+  
+  // Buscar clima
+  async function searchWeather(city: string) {
+    try {
+      const weatherData = await getCurrentWeather(city);
+      
+      // Disparar evento personalizado con los datos del clima
+      const event = new CustomEvent('weather-data', { 
+        detail: weatherData 
+      });
+      document.dispatchEvent(event);
+      
+    } catch (error) {
+      console.error('Error obteniendo el clima:', error);
+      alert('No se pudo obtener el clima de esta ciudad');
+    }
+  }
+  
+  // Submit del formulario
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const city = input.value.trim();
+    if (city) {
+      suggestions.classList.add('hidden');
+      searchWeather(city);
+    }
+  });
+  
+  // Cerrar sugerencias al hacer click fuera
+  document.addEventListener('click', (e) => {
+    if (!e.target || !(e.target as Element).closest('.relative')) {
+      suggestions.classList.add('hidden');
+    }
+  });
+  
+  // Buscar clima inicial (opcional - puedes usar una ciudad por defecto)
+  // searchWeather('Ciudad de México');
+</script>
