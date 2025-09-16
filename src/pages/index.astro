@@ -4,14 +4,30 @@ import SearchBar from '../components/SearchBar.astro';
 ---
 
 <Layout>
-  <main class="min-h-screen flex items-center justify-center p-8">
-    <div class="flex flex-col items-center w-full max-w-lg">
-      <header class="text-center mb-12 text-white">
-        <h1 class="text-5xl font-light mb-2 drop-shadow-lg">
-          Weather App
+  <main class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <!-- Elementos decorativos de fondo -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/5 rounded-full blur-2xl"></div>
+    </div>
+
+    <div class="flex flex-col items-center w-full max-w-lg relative z-10">
+      <!-- Header con mejor diseño -->
+      <header class="text-center mb-8 text-white">
+        <div class="mb-4">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl mb-4 shadow-xl">
+            <span class="text-2xl">🌤️</span>
+          </div>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-extralight mb-3 tracking-wide">
+          <span class="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+            Weather
+          </span>
+          <span class="font-light">App</span>
         </h1>
-        <p class="text-xl opacity-90 font-light">
-          Consulta el clima de cualquier ciudad del mundo
+        <p class="text-lg opacity-80 font-light tracking-wide">
+          Descubre el clima en tiempo real
         </p>
       </header>
       
@@ -22,20 +38,45 @@ import SearchBar from '../components/SearchBar.astro';
       </div>
       
       <div id="loading" class="flex-col items-center text-white mt-8 hidden">
-        <div class="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin mb-4"></div>
-        <p class="text-lg">Cargando...</p>
+        <div class="relative">
+          <div class="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+          <div class="absolute inset-0 w-12 h-12 border-4 border-transparent border-l-blue-200 rounded-full animate-spin animate-reverse"></div>
+        </div>
+        <p class="text-lg mt-4 font-light">Obteniendo datos...</p>
       </div>
       
-      <div id="welcome" class="text-center text-white mt-8">
-        <div class="text-6xl mb-4">🌤️</div>
-        <h2 class="text-3xl font-light mb-2 opacity-90">Bienvenido</h2>
-        <p class="text-xl opacity-70 font-light">Busca una ciudad para ver su clima actual</p>
+      <div id="welcome" class="text-center text-white mt-12">
+        <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-md rounded-3xl mb-6 shadow-2xl">
+          <span class="text-4xl">🌍</span>
+        </div>
+        <h2 class="text-2xl font-light mb-3 opacity-90">Explora el Mundo</h2>
+        <p class="text-lg opacity-70 font-light leading-relaxed max-w-sm mx-auto">
+          Busca cualquier ciudad y descubre su clima actual con información detallada
+        </p>
+        
+        <!-- Sugerencias de ciudades populares -->
+        <div class="mt-8">
+          <p class="text-sm opacity-60 mb-4">Ciudades populares:</p>
+          <div class="flex flex-wrap justify-center gap-2">
+            <button class="city-suggestion px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm hover:bg-white/20 transition-all duration-300 border border-white/20" data-city="Londres">
+              🇬🇧 Londres
+            </button>
+            <button class="city-suggestion px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm hover:bg-white/20 transition-all duration-300 border border-white/20" data-city="Tokyo">
+              🇯🇵 Tokio
+            </button>
+            <button class="city-suggestion px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm hover:bg-white/20 transition-all duration-300 border border-white/20" data-city="New York">
+              🇺🇸 Nueva York
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </main>
 </Layout>
 
 <script>
+  import { getCurrentWeather } from '../services/weatherApi';
+
   // Escuchar el evento personalizado de datos del clima
   document.addEventListener('weather-data', (event: any) => {
     const weatherData = event.detail;
@@ -51,43 +92,74 @@ import SearchBar from '../components/SearchBar.astro';
     welcome.classList.add('hidden');
     loading.classList.add('hidden');
     
-    // Crear el HTML de la tarjeta del clima usando Tailwind
+    // Determinar color del gradiente según temperatura
+    const temp = data.current.temp_c;
+    let tempColor = 'from-blue-400 to-blue-600'; // frío
+    if (temp > 30) tempColor = 'from-orange-400 to-red-500'; // caliente
+    else if (temp > 20) tempColor = 'from-yellow-400 to-orange-500'; // templado
+    else if (temp > 10) tempColor = 'from-green-400 to-blue-500'; // fresco
+    
+    // Crear el HTML de la tarjeta del clima con mejor diseño
     weatherContainer.innerHTML = `
-      <div class="backdrop-blur-md bg-white/15 border border-white/20 rounded-3xl p-8 shadow-2xl max-w-md w-full text-center text-white">
+      <div class="backdrop-blur-lg bg-gradient-to-br from-white/20 to-white/10 border border-white/30 rounded-3xl p-6 shadow-2xl max-w-md w-full text-center text-white transform transition-all duration-500 hover:scale-105">
+        <!-- Header de ubicación -->
         <div class="mb-6">
-          <h2 class="text-2xl font-medium opacity-95 mb-2">${data.location.name}, ${data.location.country}</h2>
-          <p class="text-sm opacity-70 capitalize">${new Date(data.location.localtime).toLocaleString('es-ES', {
+          <div class="flex items-center justify-center mb-2">
+            <svg class="w-5 h-5 mr-2 opacity-70" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2C6.69 2 4 4.69 4 8c0 5.25 6 12 6 12s6-6.75 6-12c0-3.31-2.69-6-6-6zm0 8.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            <h2 class="text-xl font-medium opacity-95">${data.location.name}</h2>
+          </div>
+          <p class="text-sm opacity-70">${data.location.country}</p>
+          <p class="text-xs opacity-60 mt-1">${new Date(data.location.localtime).toLocaleString('es-ES', {
             weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
           })}</p>
         </div>
         
-        <div class="mb-8">
-          <div class="flex items-center justify-center gap-4 mb-2">
-            <span class="text-6xl font-extralight leading-none">${Math.round(data.current.temp_c)}°</span>
-            <img src="${data.current.condition.icon}" alt="${data.current.condition.text}" class="w-20 h-20 drop-shadow-lg" />
+        <!-- Temperatura principal -->
+        <div class="mb-8 relative">
+          <div class="flex items-center justify-center gap-4 mb-3">
+            <div class="text-6xl font-ultralight bg-gradient-to-br " style="background: linear-gradient(to bottom right, ${temp > 30 ? '#fb923c, #ef4444' : temp > 20 ? '#fbbf24, #fb923c' : temp > 10 ? '#4ade80, #3b82f6' : '#60a5fa, #2563eb'}); -webkit-background-clip: text; background-clip: text; color: transparent;">
+              ${Math.round(data.current.temp_c)}°
+            </div>
+            <div class="relative">
+              <img src="${data.current.condition.icon}" alt="${data.current.condition.text}" class="w-16 h-16 drop-shadow-xl" />
+              <div class="absolute inset-0 bg-white/20 rounded-full blur-xl scale-150 -z-10"></div>
+            </div>
           </div>
-          <p class="text-lg opacity-90 font-light capitalize">${data.current.condition.text}</p>
+          <p class="text-lg opacity-90 font-light capitalize mb-2">${data.current.condition.text}</p>
+          <p class="text-sm opacity-70">Sensación térmica ${Math.round(data.current.feelslike_c)}°C</p>
         </div>
         
-        <div class="space-y-4 pt-6 border-t border-white/20">
-          <div class="flex justify-between items-center">
-            <span class="opacity-80 font-light">Sensación térmica</span>
-            <span class="font-medium">${Math.round(data.current.feelslike_c)}°C</span>
+        <!-- Grid de información adicional -->
+        <div class="grid grid-cols-2 gap-4 pt-6 border-t border-white/20">
+          <div class="text-center p-3 bg-white/10 rounded-2xl backdrop-blur-sm">
+            <div class="flex items-center justify-center mb-2">
+              <svg class="w-5 h-5 opacity-70" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M6.5 2.5c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm7 7c0 3.3-2.7 6-6 6s-6-2.7-6-6 2.7-6 6-6 6 2.7 6 6z"/>
+              </svg>
+              <span class="text-xs opacity-70 ml-1">Humedad</span>
+            </div>
+            <span class="text-lg font-medium">${data.current.humidity}%</span>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="opacity-80 font-light">Humedad</span>
-            <span class="font-medium">${data.current.humidity}%</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="opacity-80 font-light">Viento</span>
-            <span class="font-medium">${Math.round(data.current.wind_kph)} km/h</span>
+          
+          <div class="text-center p-3 bg-white/10 rounded-2xl backdrop-blur-sm">
+            <div class="flex items-center justify-center mb-2">
+              <svg class="w-5 h-5 opacity-70" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M12.5 5.5l-1-1h-3l-1 1v4l1 1h3l1-1v-4zm-4 3v-2h2v2h-2z"/>
+              </svg>
+              <span class="text-xs opacity-70 ml-1">Viento</span>
+            </div>
+            <span class="text-lg font-medium">${Math.round(data.current.wind_kph)} km/h</span>
           </div>
         </div>
+        
+        <!-- Botón para más detalles -->
+        <button id="extended-forecast-btn" class="w-full mt-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-2xl transition-all duration-300 text-sm font-medium border border-white/30 hover:border-white/50">
+          Ver pronóstico extendido
+        </button>
       </div>
     `;
     
@@ -97,16 +169,171 @@ import SearchBar from '../components/SearchBar.astro';
     
     // Animar la aparición
     weatherContainer.style.opacity = '0';
-    weatherContainer.style.transform = 'translateY(20px)';
+    weatherContainer.style.transform = 'translateY(30px) scale(0.95)';
     
     setTimeout(() => {
-      weatherContainer.style.transition = 'all 0.5s ease';
+      weatherContainer.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
       weatherContainer.style.opacity = '1';
-      weatherContainer.style.transform = 'translateY(0)';
+      weatherContainer.style.transform = 'translateY(0) scale(1)';
     }, 50);
+    
+    // Agregar funcionalidad al botón de pronóstico extendido
+    const extendedBtn = document.getElementById('extended-forecast-btn');
+    if (extendedBtn) {
+      extendedBtn.addEventListener('click', () => {
+        showExtendedForecast(data);
+      });
+    }
   }
   
-  // Función para mostrar loading
+  // Función para mostrar el modal de pronóstico extendido
+  function showExtendedForecast(data: any) {
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.id = 'forecast-modal';
+    modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4';
+    
+    // Datos adicionales del clima
+    const uvIndex = data.current.uv || 0;
+    const visibility = data.current.vis_km || 'N/A';
+    const pressure = data.current.pressure_mb || 'N/A';
+    
+    // Determinar nivel de UV
+    let uvLevel = 'Bajo';
+    let uvColor = 'text-green-400';
+    if (uvIndex > 7) { uvLevel = 'Muy Alto'; uvColor = 'text-red-400'; }
+    else if (uvIndex > 5) { uvLevel = 'Alto'; uvColor = 'text-orange-400'; }
+    else if (uvIndex > 2) { uvLevel = 'Moderado'; uvColor = 'text-yellow-400'; }
+    
+    modal.innerHTML = `
+      <div class="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-6 max-w-md w-full text-white transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+        <!-- Header del modal -->
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-medium">Información Detallada</h3>
+          <button id="close-modal" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors duration-200">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Ubicación -->
+        <div class="mb-6 text-center">
+          <h4 class="text-lg font-medium opacity-95">${data.location.name}, ${data.location.country}</h4>
+          <p class="text-sm opacity-70">Coordenadas: ${data.location.lat}°, ${data.location.lon}°</p>
+        </div>
+        
+        <!-- Grid de información extendida -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <!-- Índice UV -->
+          <div class="bg-white/10 rounded-2xl p-4 text-center backdrop-blur-sm">
+            <div class="flex items-center justify-center mb-2">
+              <svg class="w-5 h-5 mr-2 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <p class="text-xs opacity-70 mb-1">Índice UV</p>
+            <p class="text-lg font-bold">${uvIndex}</p>
+            <p class="text-xs ${uvColor}">${uvLevel}</p>
+          </div>
+          
+          <!-- Visibilidad -->
+          <div class="bg-white/10 rounded-2xl p-4 text-center backdrop-blur-sm">
+            <div class="flex items-center justify-center mb-2">
+              <svg class="w-5 h-5 mr-2 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <p class="text-xs opacity-70 mb-1">Visibilidad</p>
+            <p class="text-lg font-bold">${visibility}</p>
+            <p class="text-xs opacity-70">km</p>
+          </div>
+          
+          <!-- Presión -->
+          <div class="bg-white/10 rounded-2xl p-4 text-center backdrop-blur-sm">
+            <div class="flex items-center justify-center mb-2">
+              <svg class="w-5 h-5 mr-2 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <p class="text-xs opacity-70 mb-1">Presión</p>
+            <p class="text-lg font-bold">${pressure}</p>
+            <p class="text-xs opacity-70">mb</p>
+          </div>
+          
+          <!-- Hora local -->
+          <div class="bg-white/10 rounded-2xl p-4 text-center backdrop-blur-sm">
+            <div class="flex items-center justify-center mb-2">
+              <svg class="w-5 h-5 mr-2 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+            <p class="text-xs opacity-70 mb-1">Hora Local</p>
+            <p class="text-sm font-bold">${new Date(data.location.localtime).toLocaleTimeString('es-ES', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</p>
+            <p class="text-xs opacity-70">${new Date(data.location.localtime).toLocaleDateString('es-ES', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short'
+            })}</p>
+          </div>
+        </div>
+        
+        <!-- Botón cerrar -->
+        <button id="close-modal-btn" class="w-full py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-2xl transition-all duration-300 text-sm font-medium border border-white/30 hover:border-white/50">
+          Cerrar
+        </button>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Animar entrada del modal
+    setTimeout(() => {
+      const modalContent = document.getElementById('modal-content')!;
+      modalContent.style.transform = 'scale(1)';
+      modalContent.style.opacity = '1';
+    }, 10);
+    
+    // Event listeners para cerrar el modal
+    const closeBtn = document.getElementById('close-modal')!;
+    const closeBtnFooter = document.getElementById('close-modal-btn')!;
+    
+    const closeModal = () => {
+      const modalContent = document.getElementById('modal-content')!;
+      modalContent.style.transform = 'scale(0.95)';
+      modalContent.style.opacity = '0';
+      
+      setTimeout(() => {
+        document.body.removeChild(modal);
+      }, 300);
+    };
+    
+    closeBtn.addEventListener('click', closeModal);
+    closeBtnFooter.addEventListener('click', closeModal);
+    
+    // Cerrar al hacer clic fuera del modal
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+    
+    // Cerrar con tecla Escape
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', handleKeyDown);
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+  }
+  
+  // Función para mostrar loading con mejor animación
   function showLoading() {
     const loading = document.getElementById('loading')!;
     const welcome = document.getElementById('welcome')!;
@@ -118,4 +345,17 @@ import SearchBar from '../components/SearchBar.astro';
     weatherContainer.classList.add('hidden');
     weatherContainer.classList.remove('flex');
   }
+
+  // Ciudades sugeridas
+  document.querySelectorAll('.city-suggestion').forEach(button => {
+    button.addEventListener('click', () => {
+      const city = button.getAttribute('data-city')!;
+      const input = document.getElementById('city-input') as HTMLInputElement;
+      input.value = city;
+      
+      // Disparar búsqueda
+      const event = new Event('submit', { bubbles: true });
+      document.getElementById('weather-form')!.dispatchEvent(event);
+    });
+  });
 </script>

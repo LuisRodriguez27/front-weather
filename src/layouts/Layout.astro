@@ -5,9 +5,71 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content="Astro" />
-		<title>Weather App</title>
+		<title>Weather App - Clima en Tiempo Real</title>
+		<meta name="description" content="Descubre el clima actual de cualquier ciudad del mundo con información detallada y diseño elegante." />
 	</head>
-	<body class="min-h-screen bg-gradient-to-br from-blue-400 to-blue-600 font-sans text-gray-800">
-		<slot />
+	<body class="min-h-screen font-sans text-gray-800 relative overflow-hidden">
+		<!-- Fondo dinámico con gradientes animados -->
+		<div class="fixed inset-0 z-0">
+			<!-- Gradiente base -->
+			<div class="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600"></div>
+			
+			<!-- Gradientes animados superpuestos -->
+			<div class="absolute inset-0 bg-gradient-to-tr from-purple-400/30 via-transparent to-pink-400/30 animate-pulse"></div>
+			<div class="absolute inset-0 bg-gradient-to-bl from-cyan-400/20 via-transparent to-indigo-500/20" style="animation: float 6s ease-in-out infinite;"></div>
+			
+			<!-- Elementos decorativos flotantes -->
+			<div class="absolute top-1/4 left-1/4 w-32 h-32 bg-white/10 rounded-full blur-xl animate-bounce" style="animation-delay: 0s; animation-duration: 4s;"></div>
+			<div class="absolute top-3/4 right-1/4 w-24 h-24 bg-blue-200/20 rounded-full blur-2xl" style="animation: float 8s ease-in-out infinite reverse;"></div>
+			<div class="absolute bottom-1/4 left-1/2 w-40 h-40 bg-indigo-300/10 rounded-full blur-3xl" style="animation: pulse 3s ease-in-out infinite;"></div>
+		</div>
+		
+		<!-- Contenido principal -->
+		<div class="relative z-10">
+			<slot />
+		</div>
+		
+		<style>
+			@keyframes float {
+				0%, 100% { transform: translateY(0) rotate(0deg); }
+				50% { transform: translateY(-20px) rotate(5deg); }
+			}
+			
+			@keyframes pulse {
+				0%, 100% { opacity: 0.3; transform: scale(1); }
+				50% { opacity: 0.6; transform: scale(1.1); }
+			}
+			
+			/* Scrollbar personalizado */
+			::-webkit-scrollbar {
+				width: 8px;
+			}
+			
+			::-webkit-scrollbar-track {
+				background: rgba(255, 255, 255, 0.1);
+				border-radius: 10px;
+			}
+			
+			::-webkit-scrollbar-thumb {
+				background: rgba(255, 255, 255, 0.3);
+				border-radius: 10px;
+				transition: background 0.3s ease;
+			}
+			
+			::-webkit-scrollbar-thumb:hover {
+				background: rgba(255, 255, 255, 0.5);
+			}
+			
+			/* Efectos de selección */
+			::selection {
+				background: rgba(255, 255, 255, 0.3);
+				color: white;
+			}
+			
+			/* Suavizar todas las transiciones */
+			* {
+				transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+			}
+		</style>
 	</body>
 </html>

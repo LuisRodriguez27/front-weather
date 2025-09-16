@@ -2,22 +2,34 @@
 ---
 
 <div class="relative w-full max-w-md mb-8">
-  <form id="weather-form" class="flex bg-white/15 backdrop-blur-md rounded-full border border-white/20 overflow-hidden shadow-xl">
-    <input 
-      type="text" 
-      id="city-input" 
-      placeholder="Buscar ciudad..." 
-      class="flex-1 px-6 py-4 bg-transparent text-white placeholder-white/70 outline-none text-base"
-      autocomplete="off"
-    />
-    <button type="submit" class="px-6 py-4 bg-white/20 text-white hover:bg-white/30 transition-colors duration-300">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"></circle>
-        <path d="m21 21-4.35-4.35"></path>
-      </svg>
-    </button>
+  <form id="weather-form" class="relative">
+    <!-- Campo de búsqueda con efectos visuales -->
+    <div class="relative flex bg-white/15 backdrop-blur-lg rounded-2xl border border-white/30 overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-300 hover:border-white/40">
+      <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+      
+      <input 
+        type="text" 
+        id="city-input" 
+        placeholder="Buscar ciudad..." 
+        class="flex-1 px-6 py-4 bg-transparent text-white placeholder-white/60 outline-none text-base font-light relative z-10 backdrop-blur-sm"
+        autocomplete="off"
+      />
+      
+      <button type="submit" class="px-6 py-4 bg-white/20 text-white hover:bg-white/30 transition-all duration-300 relative z-10 group">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="transform group-hover:scale-110 transition-transform duration-300">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Línea decorativa animada -->
+    <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-white/40 to-transparent transform scale-x-0 group-focus-within:scale-x-100 transition-transform duration-500"></div>
   </form>
-  <div id="suggestions" class="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md rounded-2xl mt-2 shadow-2xl border border-white/30 z-50 max-h-48 overflow-y-auto hidden">
+  
+  <!-- Sugerencias mejoradas -->
+  <div id="suggestions" class="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-xl rounded-2xl mt-3 shadow-2xl border border-white/30 z-50 max-h-48 overflow-y-auto hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-white/20 to-white/5 rounded-2xl"></div>
     <!-- Suggestions will be populated here -->
   </div>
 </div>
@@ -30,6 +42,17 @@
   const suggestions = document.getElementById('suggestions') as HTMLDivElement;
   
   let searchTimeout: number;
+  
+  // Efectos de focus para el input
+  input.addEventListener('focus', () => {
+    form.classList.add('group');
+  });
+  
+  input.addEventListener('blur', () => {
+    setTimeout(() => {
+      form.classList.remove('group');
+    }, 200);
+  });
   
   // Búsqueda de ciudades con debounce
   input.addEventListener('input', () => {
@@ -54,22 +77,40 @@
     }, 300);
   });
   
-  // Mostrar sugerencias
+  // Mostrar sugerencias con mejor diseño
   function showSuggestions(cities: any[]) {
     if (cities.length === 0) {
       suggestions.classList.add('hidden');
       return;
     }
     
-    suggestions.innerHTML = cities
-      .map(city => `
-        <div class="px-4 py-3 text-gray-800 cursor-pointer border-b border-gray-100 hover:bg-blue-100/50 transition-colors duration-200 last:border-b-0" data-city="${city.name}, ${city.country}">
-          ${city.name}, ${city.region}, ${city.country}
-        </div>
-      `)
-      .join('');
+    suggestions.innerHTML = `
+      <div class="relative z-10">
+        ${cities
+          .map((city, index) => `
+            <div class="px-5 py-3 text-gray-800 cursor-pointer border-b border-gray-100/50 hover:bg-blue-50/80 transition-all duration-200 last:border-b-0 group relative overflow-hidden" data-city="${city.name}, ${city.country}">
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+              <div class="relative z-10">
+                <p class="font-medium text-gray-900 group-hover:text-blue-700 transition-colors duration-200">${city.name}</p>
+                <p class="text-sm text-gray-600 group-hover:text-blue-600 transition-colors duration-200">${city.region}, ${city.country}</p>
+              </div>
+            </div>
+          `)
+          .join('')}
+      </div>
+    `;
     
     suggestions.classList.remove('hidden');
+    
+    // Animar aparición
+    suggestions.style.opacity = '0';
+    suggestions.style.transform = 'translateY(-10px)';
+    
+    setTimeout(() => {
+      suggestions.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      suggestions.style.opacity = '1';
+      suggestions.style.transform = 'translateY(0)';
+    }, 10);
     
     // Agregar event listeners a las sugerencias
     suggestions.querySelectorAll('[data-city]').forEach(item => {
@@ -84,6 +125,9 @@
   
   // Buscar clima
   async function searchWeather(city: string) {
+    // Mostrar loading
+    showLoading();
+    
     try {
       const weatherData = await getCurrentWeather(city);
       
@@ -95,8 +139,67 @@
       
     } catch (error) {
       console.error('Error obteniendo el clima:', error);
-      alert('No se pudo obtener el clima de esta ciudad');
+      hideLoading();
+      
+      // Mostrar error con mejor UX
+      showError('No se pudo obtener el clima de esta ciudad. Por favor, intenta con otra.');
     }
+  }
+  
+  // Función para mostrar loading
+  function showLoading() {
+    const loading = document.getElementById('loading');
+    const welcome = document.getElementById('welcome');
+    const weatherContainer = document.getElementById('weather-container');
+    
+    if (loading) {
+      loading.classList.remove('hidden');
+      loading.classList.add('flex');
+    }
+    if (welcome) welcome.classList.add('hidden');
+    if (weatherContainer) {
+      weatherContainer.classList.add('hidden');
+      weatherContainer.classList.remove('flex');
+    }
+  }
+  
+  // Función para ocultar loading
+  function hideLoading() {
+    const loading = document.getElementById('loading');
+    if (loading) {
+      loading.classList.add('hidden');
+      loading.classList.remove('flex');
+    }
+  }
+  
+  // Función para mostrar errores
+  function showError(message: string) {
+    // Crear elemento de error temporal
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'fixed top-4 right-4 bg-red-500/90 backdrop-blur-sm text-white px-6 py-3 rounded-2xl shadow-2xl border border-red-400/50 z-50 transform translate-x-full transition-transform duration-300';
+    errorDiv.innerHTML = `
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        <span class="text-sm font-medium">${message}</span>
+      </div>
+    `;
+    
+    document.body.appendChild(errorDiv);
+    
+    // Animar entrada
+    setTimeout(() => {
+      errorDiv.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Remover después de 4 segundos
+    setTimeout(() => {
+      errorDiv.style.transform = 'translateX(full)';
+      setTimeout(() => {
+        document.body.removeChild(errorDiv);
+      }, 300);
+    }, 4000);
   }
   
   // Submit del formulario
@@ -116,6 +219,11 @@
     }
   });
   
-  // Buscar clima inicial (opcional - puedes usar una ciudad por defecto)
-  // searchWeather('Ciudad de México');
+  // Atajos de teclado
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      suggestions.classList.add('hidden');
+      input.blur();
+    }
+  });
 </script>
