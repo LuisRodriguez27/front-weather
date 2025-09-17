@@ -30,9 +30,11 @@ export async function getForecast(city: string, days = 3): Promise<ForecastWeath
   return fetchFromAPI<ForecastWeather>("forecast", { q: city, days });
 }
 
-// Clima actual con pronóstico horario y de 3 días
-export async function getCurrentWeatherWithHourly(city: string): Promise<any> {
-  return fetchFromAPI<any>("forecast", { q: city, days: 3, hours: 24 });
+// Clima actual con pronóstico horario y de días específicos
+export async function getCurrentWeatherWithHourly(city: string, days: number = 3): Promise<any> {
+  // WeatherAPI permite hasta 10 días en el plan gratuito
+  const maxDays = Math.min(days, 10);
+  return fetchFromAPI<any>("forecast", { q: city, days: maxDays, hours: 24 });
 }
 
 // Búsqueda de ciudades

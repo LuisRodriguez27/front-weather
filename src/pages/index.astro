@@ -81,6 +81,259 @@ import SearchBar from '../components/SearchBar.astro';
   declare global {
     interface Window {
       showDayHourlyForecast: (dayIndex: number) => void;
+      selectSpecificDate: (dateString: string, dayIndex: number) => void;
+      searchCustomDateForecast: (dateString: string) => Promise<void>;
+    }
+  }
+  
+  // Función para mostrar el selector de fecha
+  function showDateSelector() {
+    if (!globalWeatherData) return;
+    
+    // Obtener fechas disponibles (hasta 10 días desde hoy, incluyendo hoy)
+    const today = new Date();
+    const availableDates = [];
+    
+    for (let i = 0; i < 10; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      availableDates.push({
+        date: date,
+        dateString: date.toISOString().split('T')[0],
+        displayName: i === 0 ? 'Hoy' : 
+                    i === 1 ? 'Mañana' : 
+                    i === 2 ? 'Pasado mañana' : 
+                    date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }),
+        dayIndex: i
+      });
+    }
+    
+    // Crear modal del selector de fecha
+    const modal = document.createElement('div');
+    modal.id = 'date-selector-modal';
+    modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4';
+    
+    const datesHTML = availableDates.map(dateInfo => {
+      const isAvailable = dateInfo.dayIndex < (globalWeatherData.forecast?.forecastday?.length || 0);
+      const buttonClass = isAvailable 
+        ? 'bg-white/10 hover:bg-white/20 border-white/30 hover:border-white/50 cursor-pointer' 
+        : 'bg-gray-500/20 border-gray-500/30 cursor-not-allowed opacity-50';
+      
+      return `
+        <button class="${buttonClass} backdrop-blur-sm rounded-2xl p-4 transition-all duration-300 text-center border ${
+          isAvailable ? 'transform hover:scale-105' : ''
+        }" ${isAvailable ? `onclick="selectSpecificDate('${dateInfo.dateString}', ${dateInfo.dayIndex})"` : 'disabled'}>
+          <div class="text-sm font-medium mb-1">${dateInfo.displayName}</div>
+          <div class="text-xs opacity-70">${dateInfo.date.getDate()} ${dateInfo.date.toLocaleDateString('es-ES', { month: 'short' })}</div>
+          <div class="text-xs opacity-50">${dateInfo.dateString}</div>
+          ${!isAvailable ? '<div class="text-xs text-red-300 mt-1">No disponible</div>' : ''}
+        </button>
+      `;
+    }).join('');
+    
+    modal.innerHTML = `
+      <div class="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-6 max-w-2xl w-full text-white transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="date-selector-content">
+        <!-- Header del modal -->
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-medium">Seleccionar Fecha</h3>
+            <p class="text-sm opacity-70">Elige la fecha para ver el pronóstico detallado</p>
+          </div>
+          <button id="close-date-selector" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors duration-200">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Información de la ubicación -->
+        <div class="bg-white/10 rounded-2xl p-4 mb-6 text-center backdrop-blur-sm">
+          <h4 class="text-lg font-medium opacity-95">${globalWeatherData.location.name}, ${globalWeatherData.location.country}</h4>
+          <p class="text-sm opacity-70">Selecciona una fecha para ver el pronóstico por horas</p>
+          <p class="text-xs opacity-50 mt-2">Rango: ${today.toISOString().split('T')[0]} a ${new Date(today.getTime() + 9 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}</p>
+        </div>
+        
+        <!-- Selector de fechas -->
+        <div class="mb-6">
+          <h5 class="text-lg font-medium mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+            </svg>
+            Fechas Disponibles
+          </h5>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            ${datesHTML}
+          </div>
+        </div>
+        
+        <!-- Selector de fecha personalizada -->
+        <div class="mb-6">
+          <h5 class="text-lg font-medium mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+            </svg>
+            Fecha Personalizada
+          </h5>
+          <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
+            <div class="flex flex-col md:flex-row gap-3 items-end">
+              <div class="flex-1">
+                <label class="block text-sm opacity-70 mb-2">Seleccionar fecha:</label>
+                <input type="date" id="custom-date" class="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-blue-400 focus:bg-white/30" 
+                       min="${today.toISOString().split('T')[0]}" 
+                       max="${new Date(today.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}">
+              </div>
+              <button id="search-custom-date" class="px-6 py-2 bg-blue-500/30 hover:bg-blue-500/40 border border-blue-400/50 rounded-xl transition-all duration-300 text-sm font-medium">
+                Buscar
+              </button>
+            </div>
+            <p class="text-xs opacity-60 mt-2">Nota: Solo disponible hasta 10 días desde hoy</p>
+          </div>
+        </div>
+        
+        <!-- Botón cerrar -->
+        <button id="close-date-selector-btn" class="w-full py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-2xl transition-all duration-300 text-sm font-medium border border-white/30 hover:border-white/50">
+          Cerrar
+        </button>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Animar entrada del modal
+    setTimeout(() => {
+      const modalContent = document.getElementById('date-selector-content')!;
+      modalContent.style.transform = 'scale(1)';
+      modalContent.style.opacity = '1';
+    }, 10);
+    
+    // Event listeners para cerrar el modal
+    const closeBtn = document.getElementById('close-date-selector')!;
+    const closeBtnFooter = document.getElementById('close-date-selector-btn')!;
+    const searchCustomBtn = document.getElementById('search-custom-date')!;
+    
+    const closeModal = () => {
+      const modalContent = document.getElementById('date-selector-content')!;
+      modalContent.style.transform = 'scale(0.95)';
+      modalContent.style.opacity = '0';
+      
+      setTimeout(() => {
+        document.body.removeChild(modal);
+      }, 300);
+    };
+    
+    // Función para buscar fecha personalizada
+    const searchCustomDate = () => {
+      const dateInput = document.getElementById('custom-date') as HTMLInputElement;
+      if (dateInput.value) {
+        searchCustomDateForecast(dateInput.value);
+        closeModal();
+      }
+    };
+    
+    closeBtn.addEventListener('click', closeModal);
+    closeBtnFooter.addEventListener('click', closeModal);
+    searchCustomBtn.addEventListener('click', searchCustomDate);
+    
+    // Cerrar al hacer clic fuera del modal
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+    
+    // Cerrar con tecla Escape
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        closeModal();
+        document.removeEventListener('keydown', handleKeyDown);
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+  }
+  
+  // Función para seleccionar una fecha específica de las disponibles
+  function selectSpecificDate(dateString: string, dayIndex: number) {
+    // Cerrar el selector de fecha
+    const modal = document.getElementById('date-selector-modal');
+    if (modal) {
+      document.body.removeChild(modal);
+    }
+    
+    // Mostrar el pronóstico del día seleccionado
+    showDayHourlyForecast(dayIndex);
+  }
+  
+  // Función para buscar pronóstico de fecha personalizada
+  async function searchCustomDateForecast(dateString: string) {
+    if (!globalWeatherData) return;
+    
+    const selectedDate = new Date(dateString + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalizar a medianoche para comparación exacta
+    
+    const diffTime = selectedDate.getTime() - today.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    console.log('Fecha seleccionada:', dateString);
+    console.log('Hoy normalizado:', today.toISOString().split('T')[0]);
+    console.log('Diferencia en días:', diffDays);
+    
+    // Verificar si la fecha está dentro del rango permitido
+    if (diffDays < 0 || diffDays > 9) {
+      alert(`Solo se pueden consultar fechas entre hoy y los próximos 9 días. Días calculados: ${diffDays}`);
+      return;
+    }
+    
+    try {
+      // Mostrar loading
+      showLoadingForDate();
+      
+      // Obtener datos extendidos si es necesario
+      const city = globalWeatherData.location.name;
+      const extendedData = await getCurrentWeatherWithHourly(city, diffDays + 1);
+      
+      // Actualizar datos globales
+      globalWeatherData = extendedData;
+      
+      // Ocultar loading
+      hideLoadingForDate();
+      
+      // Mostrar el pronóstico del día seleccionado
+      showDayHourlyForecast(diffDays);
+      
+    } catch (error) {
+      hideLoadingForDate();
+      console.error('Error al obtener pronóstico:', error);
+      alert('Error al obtener el pronóstico para la fecha seleccionada.');
+    }
+  }
+  
+  // Funciones para mostrar/ocultar loading durante búsqueda de fecha
+  function showLoadingForDate() {
+    const loadingModal = document.createElement('div');
+    loadingModal.id = 'date-loading-modal';
+    loadingModal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[70] p-4';
+    
+    loadingModal.innerHTML = `
+      <div class="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-8 text-white text-center">
+        <div class="relative mb-4">
+          <div class="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto"></div>
+        </div>
+        <p class="text-lg font-medium">Obteniendo pronóstico...</p>
+        <p class="text-sm opacity-70">Consultando fecha personalizada</p>
+      </div>
+    `;
+    
+    document.body.appendChild(loadingModal);
+  }
+  
+  function hideLoadingForDate() {
+    const loadingModal = document.getElementById('date-loading-modal');
+    if (loadingModal) {
+      document.body.removeChild(loadingModal);
     }
   }
 
@@ -166,6 +419,11 @@ import SearchBar from '../components/SearchBar.astro';
         <button id="extended-forecast-btn" class="w-full mt-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-2xl transition-all duration-300 text-sm font-medium border border-white/30 hover:border-white/50">
           Ver pronóstico extendido
         </button>
+        
+        <!-- Botón para selector de fecha -->
+        <button id="date-selector-btn" class="w-full mt-3 py-3 bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-sm rounded-2xl transition-all duration-300 text-sm font-medium border border-blue-400/30 hover:border-blue-400/50">
+          📅 Consultar fecha específica
+        </button>
       </div>
     `;
     
@@ -188,6 +446,14 @@ import SearchBar from '../components/SearchBar.astro';
     if (extendedBtn) {
       extendedBtn.addEventListener('click', () => {
         showExtendedForecast(data);
+      });
+    }
+    
+    // Agregar funcionalidad al botón de selector de fecha
+    const dateSelectorBtn = document.getElementById('date-selector-btn');
+    if (dateSelectorBtn) {
+      dateSelectorBtn.addEventListener('click', () => {
+        showDateSelector();
       });
     }
   }
@@ -595,8 +861,10 @@ import SearchBar from '../components/SearchBar.astro';
     document.addEventListener('keydown', handleKeyDown);
   }
   
-  // Hacer la función disponible globalmente
+  // Hacer las funciones disponibles globalmente
   window.showDayHourlyForecast = showDayHourlyForecast;
+  window.selectSpecificDate = selectSpecificDate;
+  window.searchCustomDateForecast = searchCustomDateForecast;
   
   // Ciudades sugeridas
   document.querySelectorAll('.city-suggestion').forEach(button => {
