@@ -391,15 +391,19 @@ import SearchBar from '../components/SearchBar.astro';
     const availableDates = [];
     
     for (let i = 0; i < 10; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      
+      // Normalizar para evitar problemas de zona horaria
+      const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      
       availableDates.push({
-        date: date,
-        dateString: date.toISOString().split('T')[0],
+        date: normalizedDate,
+        dateString: normalizedDate.toISOString().split('T')[0],
         displayName: i === 0 ? 'Hoy' : 
                     i === 1 ? 'Mañana' : 
                     i === 2 ? 'Pasado mañana' : 
-                    date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }),
+                    normalizedDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }),
         dayIndex: i
       });
     }
@@ -552,6 +556,9 @@ import SearchBar from '../components/SearchBar.astro';
   
   // Función para seleccionar una fecha específica de las disponibles
   function selectSpecificDate(dateString: string, dayIndex: number) {
+    console.log('selectSpecificDate - dateString:', dateString);
+    console.log('selectSpecificDate - dayIndex:', dayIndex);
+    
     // Cerrar el selector de fecha
     const modal = document.getElementById('date-selector-modal');
     if (modal) {
@@ -1360,10 +1367,18 @@ import SearchBar from '../components/SearchBar.astro';
     if (!dayData) return;
     
     const date = new Date(dayData.date);
+    // Parsear correctamente la fecha para evitar problemas de zona horaria
+    const [year, month, day] = dayData.date.split('-').map(Number);
+    const correctedDate = new Date(year, month - 1, day);
+    
     const dayName = dayIndex === 0 ? 'Hoy' : 
                    dayIndex === 1 ? 'Mañana' : 
                    dayIndex === 2 ? 'Pasado mañana' : 
-                   date.toLocaleDateString('es-ES', { weekday: 'long' });
+                   correctedDate.toLocaleDateString('es-ES', { weekday: 'long' });
+    
+    console.log('showDayHourlyForecast - dayData.date:', dayData.date);
+    console.log('showDayHourlyForecast - fecha corregida:', correctedDate.toLocaleDateString('es-ES'));
+    console.log('showDayHourlyForecast - dayName:', dayName);
     
     // Para "Hoy", mostrar desde la hora actual. Para otros días, mostrar todas las 24 horas
     const hourlyData = dayData.hour || [];
@@ -1399,7 +1414,7 @@ import SearchBar from '../components/SearchBar.astro';
         <div class="flex items-center justify-between mb-6">
           <div>
             <h3 class="text-xl font-medium">${dayName} - Por Horas</h3>
-            <p class="text-sm opacity-70">${date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            <p class="text-sm opacity-70">${correctedDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
           </div>
           <button id="close-day-modal" class="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors duration-200">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
