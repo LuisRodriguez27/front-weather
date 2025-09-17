@@ -4,7 +4,7 @@ import SearchBar from '../components/SearchBar.astro';
 ---
 
 <Layout>
-  <main class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+  <main class="min-h-screen max-h-screen overflow-y-auto flex items-center justify-center p-4 relative">
     <!-- Elementos decorativos de fondo -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
       <div class="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
@@ -33,7 +33,7 @@ import SearchBar from '../components/SearchBar.astro';
       
       <SearchBar />
       
-      <div id="weather-container" class="w-full justify-center hidden">
+      <div id="weather-container" class="w-full justify-center hidden max-h-[90vh] overflow-y-auto">
         <!-- El contenido se generará dinámicamente -->
       </div>
       
@@ -84,10 +84,6 @@ import SearchBar from '../components/SearchBar.astro';
       selectSpecificDate: (dateString: string, dayIndex: number) => void;
       searchCustomDateForecast: (dateString: string) => Promise<void>;
       showSmartComparator: () => void;
-    }
-    
-    interface CSSStyleDeclaration {
-      WebkitOverflowScrolling: string;
     }
   }
   
@@ -436,7 +432,7 @@ import SearchBar from '../components/SearchBar.astro';
     }).join('');
     
     modal.innerHTML = `
-      <div class="weather-modal bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-4 md:p-6 max-w-2xl w-full text-white transform transition-all duration-300 scale-95 opacity-0" id="date-selector-content">
+      <div class="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-4 md:p-6 max-w-2xl w-full text-white transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="date-selector-content">
         <!-- Header del modal -->
         <div class="flex items-center justify-between mb-6">
           <div>
@@ -676,7 +672,7 @@ import SearchBar from '../components/SearchBar.astro';
     modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4';
     
     modal.innerHTML = `
-      <div class="weather-modal bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-3 md:p-6 max-w-6xl w-full text-white transform transition-all duration-300 scale-95 opacity-0" id="comparator-content">
+      <div class="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-3 md:p-6 max-w-6xl w-full text-white transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="comparator-content">
         <!-- Header del modal -->
         <div class="flex items-center justify-between mb-6">
           <div>
@@ -708,9 +704,9 @@ import SearchBar from '../components/SearchBar.astro';
             Seleccionar Fechas y Horas
           </h5>
           
-          <div class="date-time-grid grid grid-cols-1 md:grid-cols-3 gap-4" id="date-time-selectors">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="date-time-selectors">
             <!-- Selección 1 (Obligatoria) -->
-            <div class="weather-card bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-green-400/30">
+            <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-green-400/30">
               <h6 class="text-sm font-medium mb-3 text-green-300 flex items-center">
                 <span class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs mr-2">1</span>
                 Primera fecha/hora
@@ -736,7 +732,7 @@ import SearchBar from '../components/SearchBar.astro';
             </div>
             
             <!-- Selección 2 (Obligatoria) -->
-            <div class="weather-card bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-blue-400/30">
+            <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-blue-400/30">
               <h6 class="text-sm font-medium mb-3 text-blue-300 flex items-center">
                 <span class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs mr-2">2</span>
                 Segunda fecha/hora
@@ -762,7 +758,7 @@ import SearchBar from '../components/SearchBar.astro';
             </div>
             
             <!-- Selección 3 (Opcional) -->
-            <div class="weather-card bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-yellow-400/30 opacity-70">
+            <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-yellow-400/30 opacity-70">
               <h6 class="text-sm font-medium mb-3 text-yellow-300 flex items-center">
                 <span class="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-xs mr-2">3</span>
                 Tercera fecha/hora <span class="text-xs opacity-60">(opcional)</span>
@@ -1203,7 +1199,7 @@ import SearchBar from '../components/SearchBar.astro';
     modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4';
     
     modal.innerHTML = `
-      <div class="weather-modal bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-3 md:p-6 max-w-4xl w-full text-white transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+      <div class="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-3 md:p-6 max-w-4xl w-full text-white transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="modal-content">
         <!-- Header del modal -->
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-xl font-medium">Pronóstico Completo</h3>
@@ -1413,7 +1409,7 @@ import SearchBar from '../components/SearchBar.astro';
     modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-2 md:p-4';
     
     modal.innerHTML = `
-      <div class="weather-modal bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-3 md:p-6 max-w-4xl w-full text-white transform transition-all duration-300 scale-95 opacity-0" id="day-modal-content">
+      <div class="bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl p-3 md:p-6 max-w-4xl w-full text-white transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="day-modal-content">
         <!-- Header del modal -->
         <div class="flex items-center justify-between mb-6">
           <div>
@@ -1558,101 +1554,5 @@ import SearchBar from '../components/SearchBar.astro';
       const event = new Event('submit', { bubbles: true });
       document.getElementById('weather-form')!.dispatchEvent(event);
     });
-  });
-</script>
-
-<script>
-  // Función para mejorar el scroll en modales
-  function improveModalScroll() {
-    const modals = document.querySelectorAll('.weather-modal');
-    modals.forEach(modal => {
-      const modalElement = modal as HTMLElement;
-      
-      // Agregar clase para smooth scroll
-      modalElement.style.scrollBehavior = 'smooth';
-      modalElement.style.WebkitOverflowScrolling = 'touch';
-      
-      // Prevenir bounce en iOS
-      modalElement.addEventListener('touchstart', function(e) {
-        if (modalElement.scrollTop === 0) {
-          modalElement.scrollTop = 1;
-        } else if (modalElement.scrollTop === modalElement.scrollHeight - modalElement.offsetHeight) {
-          modalElement.scrollTop = modalElement.scrollHeight - modalElement.offsetHeight - 1;
-        }
-      });
-      
-      // Optimizar rendimiento durante scroll
-      let ticking = false;
-      modalElement.addEventListener('scroll', function() {
-        if (!ticking) {
-          requestAnimationFrame(function() {
-            ticking = false;
-          });
-          ticking = true;
-        }
-      });
-    });
-  }
-  
-  // Script para mejorar responsividad dinámicamente
-  function addResponsiveClasses() {
-    // Detectar tamaño de pantalla
-    const isMobile = window.innerWidth <= 768;
-    const isLaptop14 = window.innerWidth <= 1440 && window.innerHeight <= 900;
-    
-    // Aplicar clases a todos los modales existentes
-    const modals = document.querySelectorAll('[id*="modal"], [id*="Modal"]');
-    modals.forEach(modal => {
-      if (isMobile) {
-        modal.classList.add('text-sm');
-      }
-    });
-    
-    // Aplicar clases a grids
-    const grids = document.querySelectorAll('.date-time-grid');
-    grids.forEach(grid => {
-      const gridElement = grid as HTMLElement;
-      if (isMobile) {
-        gridElement.style.gridTemplateColumns = '1fr';
-        gridElement.style.gap = '12px';
-      }
-    });
-    
-    // Aplicar clases a botones
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(button => {
-      if (isMobile && button.closest('.weather-modal')) {
-        button.classList.add('text-xs', 'py-2', 'px-3');
-      }
-    });
-    
-    // Mejorar scroll en modales
-    improveModalScroll();
-  }
-  
-  // Ejecutar al cargar la página
-  document.addEventListener('DOMContentLoaded', addResponsiveClasses);
-  
-  // Ejecutar al redimensionar la ventana
-  window.addEventListener('resize', addResponsiveClasses);
-  
-  // Observer para detectar cuando se agregan nuevos modales
-  const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-      if (mutation.type === 'childList') {
-        mutation.addedNodes.forEach(function(node) {
-          const element = node as HTMLElement;
-          if (node.nodeType === 1 && (element.id && element.id.includes('modal'))) {
-            setTimeout(addResponsiveClasses, 100);
-          }
-        });
-      }
-    });
-  });
-  
-  // Observar cambios en el body
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
   });
 </script>
