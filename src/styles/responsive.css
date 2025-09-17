@@ -1,0 +1,225 @@
+/* Responsive para pantallas muy pequeñas (< 480px) */
+@media (max-width: 480px) {
+  .weather-modal {
+    margin: 4px !important;
+    padding: 12px !important;
+    max-width: calc(100vw - 8px) !important;
+    max-height: 95vh !important;
+    border-radius: 16px !important;
+  }
+  
+  .weather-modal h3 {
+    font-size: 1rem !important;
+  }
+  
+  .weather-modal h4 {
+    font-size: 0.875rem !important;
+  }
+  
+  .weather-modal h5 {
+    font-size: 0.75rem !important;
+  }
+  
+  .weather-modal p {
+    font-size: 0.625rem !important;
+  }
+  
+  .date-time-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  
+  .weather-card {
+    padding: 8px !important;
+  }
+  
+  .weather-button {
+    padding: 6px 12px !important;
+    font-size: 0.625rem !important;
+  }
+  
+  .weather-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  
+  .weather-spacing {
+    margin-bottom: 12px !important;
+  }
+}
+
+/* Estilos responsivos para Weather App */
+
+/* Estilos base para modales */
+.weather-modal {
+  max-height: 95vh !important;
+  overflow-y: auto !important;
+  scroll-behavior: smooth !important;
+  /* Scroll optimizado para móviles */
+  -webkit-overflow-scrolling: touch !important;
+  /* Acelerar el scroll en navegadores webkit */
+  transform: translate3d(0, 0, 0) !important;
+}
+
+/* Responsive para pantallas pequeñas (móviles) */
+@media (max-width: 768px) {
+  .weather-modal {
+    margin: 8px !important;
+    padding: 16px !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: 95vh !important;
+  }
+  
+  .weather-modal h3 {
+    font-size: 1.125rem !important; /* text-lg */
+  }
+  
+  .weather-modal h4 {
+    font-size: 1rem !important; /* text-base */
+  }
+  
+  .weather-modal h5 {
+    font-size: 0.875rem !important; /* text-sm */
+  }
+  
+  .weather-modal p {
+    font-size: 0.75rem !important; /* text-xs */
+  }
+  
+  /* Grid responsivo para selectores de fecha/hora */
+  .date-time-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  /* Padding reducido en cards */
+  .weather-card {
+    padding: 12px !important;
+  }
+  
+  /* Botones más compactos */
+  .weather-button {
+    padding: 8px 16px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  /* Iconos más pequeños */
+  .weather-icon {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  
+  /* Espaciado reducido */
+  .weather-spacing {
+    margin-bottom: 16px !important;
+  }
+}
+
+/* Responsive para laptops de 14" (1366x768 y similares) */
+@media (max-width: 1440px) and (max-height: 900px) {
+  .weather-modal {
+    max-height: 85vh !important;
+    padding: 16px !important;
+    font-size: 0.875rem !important;
+  }
+  
+  .weather-modal h3 {
+    font-size: 1rem !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .weather-modal h5 {
+    font-size: 0.875rem !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .weather-modal p {
+    font-size: 0.75rem !important;
+  }
+  
+  .date-time-grid {
+    gap: 12px !important;
+  }
+  
+  .weather-card {
+    padding: 12px !important;
+  }
+  
+  .weather-spacing {
+    margin-bottom: 16px !important;
+  }
+  
+  /* Hacer botones más compactos */
+  .weather-modal button {
+    padding: 6px 12px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  /* Grid de métricas más compacto */
+  .weather-modal .grid {
+    gap: 8px !important;
+  }
+  
+  /* Reducir tamaño de iconos */
+  .weather-modal svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  
+  /* Reducir espaciado de inputs */
+  .weather-modal input,
+  .weather-modal select {
+    padding: 6px 8px !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Responsive para tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .weather-modal {
+    max-width: 90vw !important;
+    padding: 24px !important;
+  }
+  
+  .date-time-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Scrollbar personalizada para mejor UX */
+.weather-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.weather-modal::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.weather-modal::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.weather-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Animaciones suaves para responsive */
+@media (prefers-reduced-motion: no-preference) {
+  .weather-modal {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Landscape en móviles */
+@media (max-width: 768px) and (orientation: landscape) {
+  .weather-modal {
+    max-height: 90vh !important;
+    padding: 12px !important;
+  }
+  
+  .weather-spacing {
+    margin-bottom: 12px !important;
+  }
+}
